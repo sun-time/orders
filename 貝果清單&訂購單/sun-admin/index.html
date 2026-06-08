@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>貝果資料庫管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Noto+Sans+TC:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FBF8F3;
+      --bg-card: #FFFFFF;
+      --bg-muted: #F5F0E8;
+      --text: #2D2317;
+      --text-muted: #6B5D4C;
+      --border: #E8E2D5;
+      --border-strong: #D4CBB8;
+      --accent: #B86F3F;
+      --accent-dark: #8B5226;
+      --success-bg: #EBF0E2;
+      --success: #4A6B3A;
+      --error-bg: #F5DDD8;
+      --error: #B33A3A;
+      --shadow-sm: 0 1px 2px rgba(45, 35, 23, 0.05);
+      --shadow: 0 1px 3px rgba(45, 35, 23, 0.06), 0 4px 12px rgba(45, 35, 23, 0.04);
+      --shadow-lg: 0 4px 12px rgba(45, 35, 23, 0.08), 0 16px 40px rgba(45, 35, 23, 0.08);
+      --radius: 8px;
+      --radius-lg: 14px;
+      --font-display: 'Fraunces', 'Noto Serif TC', Georgia, serif;
+      --font-body: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      font-family: var(--font-body);
+      font-weight: 400;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    button { font-family: inherit; }
+
+    /* ---------- Loading splash ---------- */
+    .splash {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* ---------- Login ---------- */
+    .login-shell {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      background:
+        radial-gradient(ellipse 800px 600px at 15% 20%, rgba(184, 111, 63, 0.07), transparent 60%),
+        radial-gradient(ellipse 700px 500px at 85% 80%, rgba(74, 107, 58, 0.05), transparent 60%),
+        var(--bg);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem 2rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .login-mark {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .login-card h1 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.625rem;
+      text-align: center;
+      letter-spacing: -0.015em;
+      color: var(--text);
+    }
+
+    .login-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      margin-top: 0.25rem;
+      margin-bottom: 2rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .login-form { display: flex; flex-direction: column; gap: 1rem; }
+
+    .field { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .field label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .field input {
+      font-family: inherit;
+      font-size: 0.9375rem;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(184, 111, 63, 0.15);
+    }
+
+    .login-form button {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+      letter-spacing: 0.02em;
+    }
+
+    .login-form button:hover:not(:disabled) { background: var(--accent-dark); }
+    .login-form button:active:not(:disabled) { transform: translateY(1px); }
+    .login-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .login-hint {
+      margin-top: 1.25rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    /* ---------- App shell ---------- */
+    .app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+
+    .app-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.875rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand { display: flex; align-items: center; gap: 0.625rem; }
+    .brand-mark { font-size: 1.5rem; }
+    .brand-name {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.0625rem;
+      letter-spacing: -0.005em;
+    }
+
+    .user-area { display: flex; align-items: center; gap: 0.875rem; }
+
+    .user-name {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      padding: 0.25rem 0.625rem;
+      background: var(--bg-muted);
+      border-radius: 4px;
+    }
+
+    .btn-text {
+      background: none;
+      border: none;
+      color: var(--accent-dark);
+      cursor: pointer;
+      font-size: 0.875rem;
+      padding: 0.25rem 0.5rem;
+      transition: color 0.15s;
+    }
+    .btn-text:hover { color: var(--accent); text-decoration: underline; }
+
+    .app-main {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---------- Panels ---------- */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .panel-title-group { flex: 1; min-width: 0; }
+
+    .panel-step {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent-dark);
+      letter-spacing: 0.12em;
+      background: rgba(184, 111, 63, 0.08);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    .panel h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.25rem;
+      letter-spacing: -0.005em;
+      color: var(--text);
+    }
+
+    .panel-sub {
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      margin-top: 0.25rem;
+      line-height: 1.5;
+    }
+
+    .panel-actions { flex-shrink: 0; }
+
+    /* ---------- Buttons ---------- */
+    .btn-primary {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      padding: 0.625rem 1.25rem;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-dark); }
+    .btn-primary:active:not(:disabled) { transform: translateY(1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-secondary {
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--bg-muted);
+      border-color: var(--text-muted);
+    }
+    .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ---------- Status / messages ---------- */
+    .status-row {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 0.875rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .alert {
+      font-size: 0.875rem;
+      padding: 0.75rem 0.875rem;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .alert-error {
+      background: var(--error-bg);
+      color: var(--error);
+      border-left: 3px solid var(--error);
+    }
+
+    .alert-success {
+      background: var(--success-bg);
+      color: var(--success);
+      border-left: 3px solid var(--success);
+    }
+
+    .alert-info {
+      background: var(--bg-muted);
+      color: var(--text-muted);
+      border-left: 3px solid var(--border-strong);
+      font-style: italic;
+    }
+
+    /* ---------- Tables ---------- */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      background: var(--bg-card);
+    }
+
+    thead { background: var(--bg-muted); }
+
+    th, td {
+      padding: 0.75rem 0.875rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(245, 240, 232, 0.5); }
+
+    td.col-id, td.col-price { font-variant-numeric: tabular-nums; }
+    td.col-name { font-weight: 500; white-space: nowrap; }
+
+    td.col-desc {
+      max-width: 320px;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .check.on {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+    .check.off { color: var(--border-strong); }
+
+    .tag-pill {
+      display: inline-block;
+      background: rgba(184, 111, 63, 0.1);
+      color: var(--accent-dark);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .thumb {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: block;
+      background: var(--bg-muted);
+    }
+
+    /* ---------- Empty state ---------- */
+    .empty {
+      padding: 2rem 1rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      background: var(--bg-muted);
+      border-radius: var(--radius);
+    }
+
+    .empty-mark {
+      font-size: 1.75rem;
+      opacity: 0.5;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ---------- Inline spinner ---------- */
+    .spin {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: -2px;
+      margin-right: 0.4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---------- Version tag ---------- */
+    .version-tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      background: var(--bg-muted);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+    }
+
+    /* ---------- Detail button ---------- */
+    .detail-btn {
+      background: var(--bg-muted);
+      border: 1px solid var(--border-strong);
+      color: var(--accent-dark);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+      padding: 0;
+    }
+    .detail-btn:hover { background: var(--border); border-color: var(--text-muted); }
+    .detail-btn:active { transform: scale(0.94); }
+
+    /* ---------- Modal ---------- */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(45, 35, 23, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 50;
+      animation: fadeIn 0.15s ease-out;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 440px;
+      max-height: calc(100vh - 2rem);
+      overflow: hidden;
+      position: relative;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: rgba(45, 35, 23, 0.7);
+      color: white;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .modal-close:hover { background: rgba(45, 35, 23, 0.9); }
+
+    .modal-image {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      background: var(--bg-muted);
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .modal-body {
+      padding: 1.25rem 1.5rem 1.5rem;
+      overflow-y: auto;
+    }
+
+    .modal-meta {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .modal h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.5rem;
+      letter-spacing: -0.015em;
+      margin: 0.25rem 0 0.5rem;
+      color: var(--text);
+    }
+
+    .modal-price {
+      font-family: var(--font-display);
+      color: var(--accent-dark);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .modal-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-bottom: 1.125rem;
+    }
+
+    .pill {
+      font-size: 0.75rem;
+      padding: 0.275rem 0.625rem;
+      border-radius: 5px;
+      letter-spacing: 0.02em;
+      font-weight: 500;
+    }
+
+    .pill-on { background: var(--success-bg); color: var(--success); }
+    .pill-off { background: var(--bg-muted); color: var(--text-muted); }
+    .pill-meat { background: var(--error-bg); color: var(--error); }
+    .pill-veg { background: var(--success-bg); color: var(--success); }
+    .pill-new, .pill-tag { background: rgba(184, 111, 63, 0.12); color: var(--accent-dark); }
+
+    .modal-description {
+      font-size: 0.875rem;
+      line-height: 1.75;
+      color: var(--text);
+      padding-top: 1.125rem;
+      border-top: 1px solid var(--border);
+      white-space: pre-wrap;
+    }
+
+    /* ---------- Column visibility (default desktop) ---------- */
+    .col-detail { display: none; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ---------- Mobile ---------- */
+    @media (max-width: 700px) {
+      .app-header { padding: 0.75rem 1rem; }
+      .brand-name { font-size: 0.9375rem; }
+      .user-name { font-size: 0.75rem; }
+      .app-main { padding: 1rem 1rem 3rem; gap: 1rem; }
+      .panel { padding: 1.125rem; border-radius: 12px; }
+      .panel-head { flex-direction: column; align-items: stretch; }
+      .panel-actions { display: flex; }
+      .panel-actions .btn-primary,
+      .panel-actions .btn-secondary { flex: 1; }
+      .login-card { padding: 2rem 1.5rem 1.5rem; }
+
+      /* Mobile portrait: hide tag / desc / image, show detail column */
+      .col-tag, .col-desc, .col-image { display: none; }
+      .col-detail { display: table-cell; }
+      .col-name { white-space: normal; }
+      th, td { padding: 0.625rem 0.625rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- Libraries -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <script>
+    // ============================================================
+    // 設定區
+    // ============================================================
+    const APP_VERSION = '26.06.02';
+    const SUPABASE_URL = 'https://krfrlpmgpfdntaqlyjyq.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Pg8T2D8pc-kkKIDD7hF6UA_5qRDGGsS';
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXtIeEfUgoBdXfMHqgNFueQxYecilKfNFV8vk7cOzgWRIkP8SjIBMxu_P8_u8xjGoj7isd98cMPRcA/pub?gid=0&single=true&output=csv';
+    const EMAIL_DOMAIN = '@bagel.local';
+    // ============================================================
+
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const { createApp, ref, computed, watch, onMounted } = Vue;
+
+    const app = createApp({
+      setup() {
+        // ----- 狀態 -----
+        const booting = ref(true);
+        const user = ref(null);
+
+        const loginUsername = ref('');
+        const loginPassword = ref('');
+        const loginError = ref('');
+        const loggingIn = ref(false);
+
+        const csvData = ref([]);
+        const csvLoading = ref(false);
+        const csvError = ref('');
+        const csvLoadedAt = ref(null);
+
+        const syncing = ref(false);
+        const syncStatus = ref('');
+        const syncError = ref('');
+
+        const dbData = ref([]);
+        const dbLoading = ref(false);
+        const dbError = ref('');
+        const dbLoadedAt = ref(null);
+
+        // 詳情彈窗目前顯示的資料(null 表示關閉)
+        const detailRow = ref(null);
+
+        // 開啟彈窗時鎖背景捲動
+        watch(detailRow, (val) => {
+          document.body.style.overflow = val ? 'hidden' : '';
+        });
+
+        const displayUsername = computed(() => {
+          if (!user.value) return '';
+          const email = user.value.email || '';
+          if (email.endsWith(EMAIL_DOMAIN)) {
+            return email.slice(0, -EMAIL_DOMAIN.length);
+          }
+          return email;
+        });
+
+        // ----- 方法 -----
+        async function login() {
+          loginError.value = '';
+          loggingIn.value = true;
+          try {
+            const input = loginUsername.value.trim();
+            if (!input) throw new Error('請輸入帳號');
+            const email = input.includes('@') ? input : input + EMAIL_DOMAIN;
+            const { data, error } = await sb.auth.signInWithPassword({
+              email,
+              password: loginPassword.value
+            });
+            if (error) throw error;
+            user.value = data.user;
+            loginPassword.value = '';
+            await loadDB();
+          } catch (e) {
+            loginError.value = translateAuthError(e.message);
+          } finally {
+            loggingIn.value = false;
+          }
+        }
+
+        async function logout() {
+          await sb.auth.signOut();
+          user.value = null;
+          csvData.value = [];
+          dbData.value = [];
+          csvLoadedAt.value = null;
+          dbLoadedAt.value = null;
+          syncStatus.value = '';
+          syncError.value = '';
+        }
+
+        async function loadCSV() {
+          csvLoading.value = true;
+          csvError.value = '';
+          try {
+            // 加 cache-buster,避免讀到瀏覽器或 CDN 的舊版
+            const url = CSV_URL + '&_t=' + Date.now();
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('讀取失敗,HTTP ' + res.status);
+            const text = await res.text();
+            const result = Papa.parse(text, {
+              header: true,
+              skipEmptyLines: true
+            });
+            if (result.errors && result.errors.length) {
+              throw new Error('CSV 解析錯誤:' + result.errors[0].message);
+            }
+            csvData.value = result.data
+              .filter(row => row['排序'] && row['名稱'])
+              .map(row => ({
+                sort_order: Number(row['排序']),
+                name: String(row['名稱']).trim(),
+                price: Number(row['定價']) || 0,
+                is_meat: row['葷食'] === 'TRUE',
+                is_new: row['新品'] === 'TRUE',
+                is_active: row['上架'] === 'TRUE',
+                tag: (row['特殊標籤'] || '').trim() || null,
+                description: (row['簡介文字'] || '').trim(),
+                image_url: (row['圖片連結'] || '').trim()
+              }));
+            csvLoadedAt.value = new Date();
+          } catch (e) {
+            csvError.value = e.message;
+          } finally {
+            csvLoading.value = false;
+          }
+        }
+
+        async function syncToDatabase() {
+          if (!csvData.value.length) return;
+          const ok = window.confirm(
+            `即將清空資料庫並寫入 ${csvData.value.length} 筆貝果資料,確定要繼續嗎?`
+          );
+          if (!ok) return;
+
+          syncing.value = true;
+          syncStatus.value = '';
+          syncError.value = '';
+          try {
+            // Step 1: 清空舊資料
+            const { error: delErr } = await sb
+              .from('bagels')
+              .delete()
+              .gte('id', 0);
+            if (delErr) throw delErr;
+
+            // Step 2: 寫入新資料
+            const { error: insErr } = await sb
+              .from('bagels')
+              .insert(csvData.value);
+            if (insErr) throw insErr;
+
+            syncStatus.value = `同步成功,已寫入 ${csvData.value.length} 筆資料。`;
+            await loadDB();
+          } catch (e) {
+            syncError.value = e.message || '同步失敗';
+          } finally {
+            syncing.value = false;
+          }
+        }
+
+        async function loadDB() {
+          dbLoading.value = true;
+          dbError.value = '';
+          try {
+            const { data, error } = await sb
+              .from('bagels')
+              .select('*')
+              .order('sort_order', { ascending: true });
+            if (error) throw error;
+            dbData.value = data || [];
+            dbLoadedAt.value = new Date();
+          } catch (e) {
+            dbError.value = e.message;
+          } finally {
+            dbLoading.value = false;
+          }
+        }
+
+        function formatTime(d) {
+          if (!d) return '';
+          return d.toLocaleString('zh-TW', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+          });
+        }
+
+        function translateAuthError(msg) {
+          if (!msg) return '登入失敗';
+          if (/Invalid login credentials/i.test(msg)) return '帳號或密碼錯誤';
+          if (/Email not confirmed/i.test(msg)) return '此帳號尚未確認,請聯絡管理員';
+          if (/rate limit/i.test(msg)) return '嘗試太頻繁,請稍候再試';
+          return msg;
+        }
+
+        // ----- 啟動 -----
+        onMounted(async () => {
+          const { data: { session } } = await sb.auth.getSession();
+          if (session) {
+            user.value = session.user;
+            await loadDB();
+          }
+          booting.value = false;
+
+          sb.auth.onAuthStateChange((_event, session) => {
+            user.value = session?.user || null;
+          });
+        });
+
+        return {
+          APP_VERSION,
+          booting, user,
+          loginUsername, loginPassword, loginError, loggingIn,
+          csvData, csvLoading, csvError, csvLoadedAt,
+          syncing, syncStatus, syncError,
+          dbData, dbLoading, dbError, dbLoadedAt,
+          detailRow,
+          displayUsername,
+          login, logout, loadCSV, syncToDatabase, loadDB, formatTime
+        };
+      },
+
+      template: `
+        <div v-if="booting" class="splash">載入中…</div>
+
+        <!-- ========== 登入 ========== -->
+        <div v-else-if="!user" class="login-shell">
+          <div class="login-card">
+            <div class="login-mark">🥯</div>
+            <h1>貝果資料庫</h1>
+            <div class="login-subtitle">Admin Console</div>
+
+            <form class="login-form" @submit.prevent="login">
+              <div class="field">
+                <label for="username">帳號</label>
+                <input id="username" v-model="loginUsername" type="text" required
+                       autocomplete="username" autofocus placeholder="例:joyce">
+              </div>
+              <div class="field">
+                <label for="password">密碼</label>
+                <input id="password" v-model="loginPassword" type="password" required
+                       autocomplete="current-password">
+              </div>
+              <button type="submit" :disabled="loggingIn">
+                <span v-if="loggingIn" class="spin"></span>{{ loggingIn ? '登入中…' : '登入' }}
+              </button>
+              <div v-if="loginError" class="alert alert-error">{{ loginError }}</div>
+            </form>
+
+            <div class="login-hint">v{{ APP_VERSION }} · 內部使用 · 忘記密碼請聯絡管理員</div>
+          </div>
+        </div>
+
+        <!-- ========== 主畫面 ========== -->
+        <div v-else class="app-shell">
+          <header class="app-header">
+            <div class="brand">
+              <span class="brand-mark">🥯</span>
+              <span class="brand-name">貝果資料庫管理</span>
+              <span class="version-tag">v{{ APP_VERSION }}</span>
+            </div>
+            <div class="user-area">
+              <span class="user-name">{{ displayUsername }}</span>
+              <button class="btn-text" @click="logout">登出</button>
+            </div>
+          </header>
+
+          <main class="app-main">
+
+            <!-- 步驟 1:讀取試算表 -->
+            <section class="panel">
+              <div class="panel-head">
+                <div class="panel-title-group">
+                  <div class="panel-step">Step 1</div>
+                  <h2>從 Google 試算表讀取</h2>
+                  <p class="panel-sub">讀取最新的試算表內容並顯示預覽,此步驟不會更動資料庫。</p>
+                </div>
+                <div class="panel-actions">
+                  <button class="btn-primary" @click="loadCSV" :disabled="csvLoading">
+                    <span v-if="csvLoading" class="spin"></span>{{ csvLoading ? '讀取中…' : '讀取試算表' }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="csvLoadedAt" class="status-row">
+                <span class="status-dot"></span>
+                <span>最後讀取:{{ formatTime(csvLoadedAt) }}</span>
+                <span>·</span>
+                <span>共 {{ csvData.length }} 筆</span>
+              </div>
+              <div v-if="csvError" class="alert alert-error">{{ csvError }}</div>
+
+              <div v-if="csvData.length" class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>名稱</th>
+                      <th>定價</th>
+                      <th>葷</th>
+                      <th>新</th>
+                      <th>上架</th>
+                      <th class="col-tag">標籤</th>
+                      <th class="col-desc">簡介</th>
+                      <th class="col-image">圖</th>
+                      <th class="col-detail">詳情</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="row in csvData" :key="'csv-' + row.sort_order">
+                      <td class="col-id">{{ row.sort_order }}</td>
+                      <td class="col-name">{{ row.name }}</td>
+                      <td class="col-price">{{ row.price }}</td>
+                      <td><span :class="['check', row.is_meat ? 'on' : 'off']">{{ row.is_meat ? '✓' : '·' }}</span></td>
+                      <td><span :class="['check', row.is_new ? 'on' : 'off']">{{ row.is_new ? '✓' : '·' }}</span></td>
+                      <td><span :class="['check', row.is_active ? 'on' : 'off']">{{ row.is_active ? '✓' : '·' }}</span></td>
+                      <td class="col-tag"><span v-if="row.tag" class="tag-pill">{{ row.tag }}</span></td>
+                      <td class="col-desc">{{ row.description }}</td>
+                      <td class="col-image">
+                        <a v-if="row.image_url" :href="row.image_url" target="_blank" rel="noopener">
+                          <img :src="row.image_url" :alt="row.name" loading="lazy" class="thumb">
+                        </a>
+                      </td>
+                      <td class="col-detail">
+                        <button class="detail-btn" @click="detailRow = row" aria-label="查看詳情">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- 步驟 2:同步到資料庫 -->
+            <section class="panel">
+              <div class="panel-head">
+                <div class="panel-title-group">
+                  <div class="panel-step">Step 2</div>
+                  <h2>同步到資料庫</h2>
+                  <p class="panel-sub">將清空資料庫,並把剛剛讀取到的內容全部寫入。確定試算表內容無誤再執行。</p>
+                </div>
+                <div class="panel-actions">
+                  <button class="btn-primary" @click="syncToDatabase"
+                          :disabled="syncing || !csvData.length">
+                    <span v-if="syncing" class="spin"></span>{{ syncing ? '同步中…' : '同步到資料庫' }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="!csvData.length" class="alert alert-info">請先完成步驟 1,讀取試算表後才能同步。</div>
+              <div v-if="syncStatus" class="alert alert-success">{{ syncStatus }}</div>
+              <div v-if="syncError" class="alert alert-error">{{ syncError }}</div>
+            </section>
+
+            <!-- 資料庫現況 -->
+            <section class="panel">
+              <div class="panel-head">
+                <div class="panel-title-group">
+                  <div class="panel-step">Database</div>
+                  <h2>資料庫目前內容</h2>
+                  <p class="panel-sub">這就是銷售網站實際會讀到的資料。</p>
+                </div>
+                <div class="panel-actions">
+                  <button class="btn-secondary" @click="loadDB" :disabled="dbLoading">
+                    <span v-if="dbLoading" class="spin"></span>{{ dbLoading ? '讀取中…' : '重新整理' }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="dbLoadedAt" class="status-row">
+                <span class="status-dot"></span>
+                <span>最後讀取:{{ formatTime(dbLoadedAt) }}</span>
+                <span>·</span>
+                <span>共 {{ dbData.length }} 筆</span>
+              </div>
+              <div v-if="dbError" class="alert alert-error">{{ dbError }}</div>
+
+              <div v-if="dbData.length" class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>名稱</th>
+                      <th>定價</th>
+                      <th>葷</th>
+                      <th>新</th>
+                      <th>上架</th>
+                      <th class="col-tag">標籤</th>
+                      <th class="col-desc">簡介</th>
+                      <th class="col-image">圖</th>
+                      <th class="col-detail">詳情</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="row in dbData" :key="'db-' + row.id">
+                      <td class="col-id">{{ row.sort_order }}</td>
+                      <td class="col-name">{{ row.name }}</td>
+                      <td class="col-price">{{ row.price }}</td>
+                      <td><span :class="['check', row.is_meat ? 'on' : 'off']">{{ row.is_meat ? '✓' : '·' }}</span></td>
+                      <td><span :class="['check', row.is_new ? 'on' : 'off']">{{ row.is_new ? '✓' : '·' }}</span></td>
+                      <td><span :class="['check', row.is_active ? 'on' : 'off']">{{ row.is_active ? '✓' : '·' }}</span></td>
+                      <td class="col-tag"><span v-if="row.tag" class="tag-pill">{{ row.tag }}</span></td>
+                      <td class="col-desc">{{ row.description }}</td>
+                      <td class="col-image">
+                        <a v-if="row.image_url" :href="row.image_url" target="_blank" rel="noopener">
+                          <img :src="row.image_url" :alt="row.name" loading="lazy" class="thumb">
+                        </a>
+                      </td>
+                      <td class="col-detail">
+                        <button class="detail-btn" @click="detailRow = row" aria-label="查看詳情">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div v-else-if="!dbLoading && !dbError" class="empty">
+                <div class="empty-mark">🥯</div>
+                <div>資料庫目前是空的,請先完成上方兩個步驟。</div>
+              </div>
+            </section>
+
+          </main>
+
+          <!-- ========== 詳情彈窗 ========== -->
+          <div v-if="detailRow" class="modal-backdrop" @click.self="detailRow = null">
+            <div class="modal">
+              <button class="modal-close" @click="detailRow = null" aria-label="關閉">✕</button>
+              <img v-if="detailRow.image_url" :src="detailRow.image_url" :alt="detailRow.name" class="modal-image">
+              <div class="modal-body">
+                <div class="modal-meta">#{{ detailRow.sort_order }}</div>
+                <h3>{{ detailRow.name }}</h3>
+                <div class="modal-price">NT$ {{ detailRow.price }}</div>
+                <div class="modal-pills">
+                  <span :class="['pill', detailRow.is_active ? 'pill-on' : 'pill-off']">
+                    {{ detailRow.is_active ? '上架中' : '未上架' }}
+                  </span>
+                  <span :class="['pill', detailRow.is_meat ? 'pill-meat' : 'pill-veg']">
+                    {{ detailRow.is_meat ? '葷' : '素' }}
+                  </span>
+                  <span v-if="detailRow.is_new" class="pill pill-new">新品</span>
+                  <span v-if="detailRow.tag" class="pill pill-tag">{{ detailRow.tag }}</span>
+                </div>
+                <div class="modal-description">{{ detailRow.description || '(無簡介)' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+</html>

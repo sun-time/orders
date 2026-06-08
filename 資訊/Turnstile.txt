@@ -1,0 +1,10 @@
+小工具金鑰
+使用這些金鑰將 Turnstile 整合至您的應用程式。Site key 用於客戶端程式碼，而 Secret key 必須安全地保存在伺服器上以供驗證。
+
+Site key
+
+Site key
+0x4AAAAAADgdb8TUbvS0m5sX
+
+Secret key
+0x4AAAAAADgdb9KkacJcAto58Me9WULfnXU
