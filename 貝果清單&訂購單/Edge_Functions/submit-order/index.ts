@@ -1,7 +1,7 @@
 // ============================================================
 // submit-order — 訂單送出 Edge Function（核心版，尚未含通知）
-// 部署：Supabase 後台 → Edge Functions → Deploy a new function
-//       → Via Editor → 命名為 submit-order → 貼上本檔內容 → Deploy
+// 這份內容請貼進函式的「index.ts」（進入點）。
+// 函式名稱（網址用）在建立畫面的名稱欄位填 submit-order，與檔名無關。
 // 需要的環境變數（Secrets）：TURNSTILE_SECRET
 //   （SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 由 Supabase 自動注入，不用自己加）
 // ============================================================
@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
         }),
       },
     );
-    const tsData = await tsRes.json();
+    const tsData = await tsRes.json() as any;
     if (!tsData.success) return jsonRes({ error: "人機驗證失敗，請重新整理再試" }, 403);
 
     // 4. service_role client（略過 RLS）
@@ -91,16 +91,19 @@ Deno.serve(async (req) => {
     );
 
     // 5. 用 bagel_id 向 DB 撈現價、重算金額（不信前端傳的價格）
-    const bagelIds = [...new Set(items.map((it: any) => Number(it.bagel_id)))];
+    const bagelIds = [...new Set((items as any[]).map((it) => Number(it.bagel_id)))];
     const { data: bagels, error: bagelErr } = await supabase
       .from("bagels").select("id,name,price,is_active").in("id", bagelIds);
     if (bagelErr) throw bagelErr;
 
-    const bagelMap = new Map((bagels ?? []).map((b: any) => [b.id, b]));
+    // 用一般物件當查表，避免 Map 的型別問題
+    const bagelMap: Record<number, any> = {};
+    for (const b of (bagels ?? []) as any[]) bagelMap[Number(b.id)] = b;
+
     const lineItems: any[] = [];
     let subtotal = 0, itemCount = 0;
-    for (const it of items) {
-      const b = bagelMap.get(Number(it.bagel_id));
+    for (const it of items as any[]) {
+      const b: any = bagelMap[Number(it.bagel_id)];
       const qty = Math.floor(Number(it.qty));
       if (!b || !b.is_active) return jsonRes({ error: "有品項已下架或不存在，請重新整理" }, 400);
       if (!Number.isInteger(qty) || qty <= 0) continue;
@@ -114,9 +117,10 @@ Deno.serve(async (req) => {
     const { data: cfg, error: cfgErr } = await supabase
       .from("settings").select("*").eq("id", 1).single();
     if (cfgErr) throw cfgErr;
+    const c = cfg as any;
     let shipping = 0;
-    if (delivery_method === "kaohsiung") shipping = subtotal >= cfg.kh_free_min ? 0 : cfg.kh_fee;
-    else if (delivery_method === "island") shipping = subtotal >= cfg.island_free_min ? 0 : cfg.island_fee;
+    if (delivery_method === "kaohsiung") shipping = subtotal >= c.kh_free_min ? 0 : c.kh_fee;
+    else if (delivery_method === "island") shipping = subtotal >= c.island_free_min ? 0 : c.island_fee;
     const total = subtotal + shipping;
 
     // 7. 產生訂單編號（撞號重試）
@@ -141,13 +145,76 @@ Deno.serve(async (req) => {
         client_ip: ip, user_agent: req.headers.get("user-agent") ?? null,
       }).select("order_code").single();
 
-      if (!error) { inserted = data; break; }
-      if (error.code !== "23505") throw error; // 非「編號重複」就是真錯誤
+      if (!error) { inserted = data as any; break; }
+      if ((error as any).code !== "23505") throw error; // 非「編號重複」就是真錯誤
       // 否則編號撞號 → 迴圈會用更大的 seq 再試
     }
     if (!inserted) return jsonRes({ error: "訂單編號產生失敗，請再試一次" }, 500);
 
-    // 8. TODO：通知（Telegram / Resend / 寫 Google 試算表）— 之後補在這裡
+    // 8. 通知（best-effort：失敗不影響已成立的訂單）
+    try {
+      const tgToken = Deno.env.get("TELEGRAM_TOKEN");
+      const tgChat = Deno.env.get("TELEGRAM_CHAT_ID");
+      if (tgToken && tgChat) {
+        const dmMap: Record<string, string> = {
+          pickup: "自取", kaohsiung: "高雄市區送貨", island: "冷凍宅配（本島）",
+        };
+        const lines = lineItems
+          .map((it) => `· ${it.name} ×${it.qty} = $${it.price * it.qty}`)
+          .join("\n");
+        const text =
+          `🥯 新訂單 ${inserted.order_code}\n` +
+          `姓名：${name}\n` +
+          `電話：${phone}\n` +
+          `配送：${dmMap[delivery_method] || delivery_method}` +
+          (address ? `（${address}）` : "") + "\n" +
+          `${lines}\n` +
+          `小計 $${subtotal}　運費 $${shipping}\n` +
+          `總計 $${total}` +
+          (notes ? `\n備註：${notes}` : "");
+        await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: tgChat, text: text }),
+        });
+      }
+    } catch (e) {
+      console.error("telegram notify failed:", e instanceof Error ? e.message : String(e));
+    }
+    // 8b. 寫入 Google 試算表（透過 Apps Script Web App，best-effort）
+    try {
+      const sheetUrl = Deno.env.get("GSHEET_WEBHOOK_URL");
+      if (sheetUrl) {
+        const dmMap2: Record<string, string> = {
+          pickup: "自取", kaohsiung: "高雄市區送貨", island: "冷凍宅配（本島）",
+        };
+        const itemsText = lineItems.map((it) => `${it.name}×${it.qty}`).join("、");
+        await fetch(sheetUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            secret: Deno.env.get("GSHEET_SECRET") ?? "",
+            order_code: inserted.order_code,
+            created_at: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false }),
+            customer_name: name,
+            phone: phone,
+            email: email,
+            delivery_method: dmMap2[delivery_method] || delivery_method,
+            address: address ?? "",
+            items_text: itemsText,
+            item_count: itemCount,
+            subtotal: subtotal,
+            shipping_fee: shipping,
+            total_amount: total,
+            notes: notes ?? "",
+            status: "new",
+          }),
+        });
+      }
+    } catch (e) {
+      console.error("gsheet write failed:", e instanceof Error ? e.message : String(e));
+    }
+    // （Resend 寄信之後有網域再補在這裡）
 
     return jsonRes({ order_code: inserted.order_code });
   } catch (e) {
